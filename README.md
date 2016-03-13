@@ -5,7 +5,7 @@ This directory contains a set of tools for mesh adaptation intwo and three dimen
 Mesh adaptation strategy has proved to be very efficient in numerical solutions of PDEs. The ability to adapt the elements geometric properties (size, shape and orientation) according to specific quantities related to the data greatly improves the accuracy of the solution and the convergence rate of numerical schemes.
 
 The approach pionneered in our group (F. Hecht et al.) relies on the construction of nearly uniform simplicial meshes in a metric space. The underlying metric is related to the (approximate) Hessian of the solution of the problem.
-![cfdaniso](https://cloud.githubusercontent.com/assets/11386916/13727548/c20911d4-e8f6-11e5-89cb-c73a6ee7d9b7.png)
+![aniso](https://cloud.githubusercontent.com/assets/11386916/13727601/ecdd2862-e8f8-11e5-97ed-1e436c98a851.png)
 
 #### Installation
 1. Install the [ICS Commons Library](https://github.com/ICStoolbox/Commons) on your system. 
