@@ -134,7 +134,7 @@ int locelt_3d(pMesh mesh,int nsd,double *c,double *cb) {
     /* p in 1 */
     vol1 = vto - vol2 - vol3 - vol4;
     if ( vol1 < eps ) {
-			nsp = nsf;
+      nsp = nsf;
       nsf = pt->adj[0] / 4;
       if ( !nsf ) {
         cb[0] = 0.0;
@@ -146,12 +146,15 @@ int locelt_3d(pMesh mesh,int nsd,double *c,double *cb) {
     dd = fabs(vol1+vol2+vol3+vol4);
     if ( dd > MI_EPSD ) {
 	    dd = 1.0 / dd;
-      cb[0] = fabs(vol1) * dd;
-      cb[1] = fabs(vol2) * dd;
-      cb[2] = fabs(vol3) * dd;
-      cb[3] = fabs(vol4) * dd;
+      cb[0] = vol1 * dd;
+      cb[1] = vol2 * dd;
+      cb[2] = vol3 * dd;
+      cb[3] = vol4 * dd;
     }
-    return(nsf);
+    if ( (cb[0]>=0.0) && (cb[1]>=0.0) && (cb[2]>=0.0) && (cb[3]>=0.0) )
+      return(nsf);
+    else
+      return(-nsf);
   }
 
   return(nsp);
@@ -227,20 +230,19 @@ int locelt_2d(Mesh *mesh,int nsd,double *c,double *cb) {
       else
         continue;
     }
-    aire1 = MI_MAX(aire1,0.0);
-    aire2 = MI_MAX(aire2,0.0);
-    aire3 = MI_MAX(aire3,0.0);
-    dd    = aire1 + aire2 + aire3;
+    dd = fabs(aire1+aire2+aire3);
     if ( dd > MI_EPSD ) {
       dd = 1.0 / dd;
       cb[0] = aire1 * dd;
       cb[1] = aire2 * dd;
       cb[2] = aire3 * dd;
     }
-    return(nsf);
+    if ( (cb[0]>=0.0) && (cb[1]>=0.0) && (cb[2]>=0.0) )
+      return(nsf);
+    else
+      return(-nsf);
   }
 
-  /* no need for exhaustive search */
   return(nsp);
 }
 

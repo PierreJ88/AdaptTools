@@ -92,7 +92,7 @@ int buckin_3d(Mesh *mesh,Bucket *bck,double *c) {
         }
       }
     }
-    while ( ++d < bck->size/2 );
+    while ( ++d < bck->size/8 );
   }
 
   return(0);
@@ -124,8 +124,11 @@ int buckin_2d(Mesh *mesh,Bucket *bck,double *c) {
         }
       }
     }
-    while ( ++d < bck->size/2 );
+    while ( ++d < bck->size/8 );
   }
 
   return(0);
 }
+
+
+

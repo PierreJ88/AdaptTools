@@ -6,7 +6,7 @@ int mshint1_3d(MIst *mist) {
   pPoint   ppt;
   pTetra   pt;
   double  *u,*ua,*ub,*uc,*ud,cb[4];
-  int      i,k,iel,ip,nb;
+  int      i,k,iel,ip,nb,np;
 
   /* interpolation */
   bck = bucket_3d(&mist->msrc,BUCKSIZ);
@@ -17,14 +17,14 @@ int mshint1_3d(MIst *mist) {
     fflush(stdout);
   }
  
-  nb = 0;
+  nb = np = 0;
   for (k=1; k<=mist->mtgt.np; k++) {
     ppt  = &mist->mtgt.point[k];
     /* get seed element */
     iel  = buckin_3d(&mist->msrc,bck,ppt->c);
     if ( iel ) {
       iel  = locelt_3d(&mist->msrc,iel,ppt->c,cb);
-      if ( iel ) {
+      if ( iel > 0 ) {
         pt = &mist->msrc.tetra[iel];
         u  = &mist->stgt.u[(k-1)*mist->stgt.size[0]];
         ua = &mist->ssrc.u[(pt->v[0]-1)*mist->ssrc.size[0]];
@@ -36,19 +36,21 @@ int mshint1_3d(MIst *mist) {
           u[i] = cb[0]*ua[i] + cb[1]*ub[i] + cb[2]*uc[i] + cb[3]*uc[i];
       }
     }
-    if ( !iel ) {
+    if ( iel < 1 ) {
+      /* exhaustive search */
       ip = closept_3d(&mist->msrc,ppt->c);
       if ( ip ) {
         ua = &mist->ssrc.u[(ip-1)*mist->ssrc.size[0]];
         u  = &mist->stgt.u[(k-1)*mist->stgt.size[0]];
         memcpy(u,ua,mist->stgt.size[0]*sizeof(double));
+        np++;
       }
       else
         nb++;
     }
   }
   if ( mist->info.verb != '0' ) {
-    fprintf(stdout,"%d\n",mist->mtgt.np);
+    fprintf(stdout,"%d, %d prox.\n",mist->mtgt.np,np);
     if ( nb > 0 )  fprintf(stdout," # Warning: %d nodes failed.\n",nb);
   }
 
@@ -92,7 +94,7 @@ int mshint1_2d(MIst *mist) {
           u[i] = cb[0]*ua[i] + cb[1]*ub[i] + cb[2]*uc[i];
       }
     }
-    if ( !iel ) {
+    if ( iel < 1 ) {
       ip = closept_2d(&mist->msrc,ppt->c);
       if ( ip ) {
         ua = &mist->ssrc.u[(ip-1)*mist->ssrc.size[0]];
