@@ -2,6 +2,9 @@
 This directory contains a set of tools for mesh adaptation intwo and three dimensions. They can be used and combined in a Linux/Unix/Posix-compliant shell script wrapper or called as functions from C/C++/F programs.
 
 #### Mesh adaptation
+Mesh adaptation strategy has proved to be very efficient in numerical solutions of PDEs. The ability to adapt the elements geometric properties (size, shape and orientation) according to specific quantities related to the data greatly improves the accuracy of the solution and the convergence rate of numerical schemes.
+
+The approach pionneered in our group (F. Hecht et al.) relies on the construction of nearly uniform simplicial meshes in a metric space. The underlying metric is related to the (approximate) Hessian of the solution of the problem.
 
 #### Installation
 1. Install the [ICS Commons Library](https://github.com/ICStoolbox/Commons) on your system. 
