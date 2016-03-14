@@ -4,6 +4,7 @@ INCLUDE_DIRECTORIES(  "$ENV{HOME}/include")
 LINK_DIRECTORIES(     "$ENV{HOME}/lib")
 SET(CMAKE_CXX_FLAGS   "-Wunused-result -Wno-dev -g -O3")
 set(CMAKE_MACOSX_RPATH 1)
+set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
 #AdaptTools library
 project(AdaptTools)
@@ -19,9 +20,7 @@ INSTALL(               FILES ${header_files} DESTINATION "$ENV{HOME}/include")
 project(main)
 add_executable(        mshint sources/mshint.c)
 target_link_libraries( mshint Commons AdaptTools)
-
 INSTALL(               TARGETS mshint RUNTIME DESTINATION "$ENV{HOME}/bin")
-set_property(TARGET    mshint PROPERTY INSTALL_RPATH_USE_LINK_PATH TRUE)
 
  
 

@@ -1,4 +1,5 @@
-# AdaptTools
+# AdaptTools [![Build Status](https://travis-ci.org/ICStoolbox/AdaptTools.svg?branch=master)](https://travis-ci.org/ICStoolbox/AdaptTools)
+
 This directory contains a set of tools for mesh adaptation intwo and three dimensions. They can be used and combined in a Linux/Unix/Posix-compliant shell script wrapper or called as functions from C/C++/F programs.
 
 #### Mesh adaptation
