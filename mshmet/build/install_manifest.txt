@@ -1,0 +1,4 @@
+/Users/frey/lib/libAdaptTools.dylib
+/Users/frey/include/ms_calls.h
+/Users/frey/include/mshmet.h
+/Users/frey/bin/mshmet
