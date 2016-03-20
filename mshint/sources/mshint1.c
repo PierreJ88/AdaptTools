@@ -76,15 +76,15 @@ int mshint1_2d(MIst *mist) {
     fprintf(stdout,"    Nodal interpolation: ");
     fflush(stdout);
   }
- 
+  puts("debut\n----------------------\n");
   nb = 0;
   for (k=1; k<=mist->mtgt.np; k++) {
     ppt  = &mist->mtgt.point[k];
     /* get seed element */
     iel  = buckin_2d(&mist->msrc,bck,ppt->c);
-    if ( iel ) {
+    if ( iel > 0 ) {
       iel  = locelt_2d(&mist->msrc,iel,ppt->c,cb);
-      if ( iel ) {
+      if ( iel > 0 ) {
         pt = &mist->msrc.tria[iel];
         u  = &mist->stgt.u[(k-1)*mist->stgt.size[0]];
         ua = &mist->ssrc.u[(pt->v[0]-1)*mist->ssrc.size[0]];
@@ -96,7 +96,7 @@ int mshint1_2d(MIst *mist) {
     }
     if ( iel < 1 ) {
       ip = closept_2d(&mist->msrc,ppt->c);
-      if ( ip ) {
+      if ( ip > 0 ) {
         ua = &mist->ssrc.u[(ip-1)*mist->ssrc.size[0]];
         u  = &mist->stgt.u[(k-1)*mist->stgt.size[0]];
         memcpy(u,ua,mist->stgt.size[0]*sizeof(double));

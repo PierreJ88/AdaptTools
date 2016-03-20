@@ -149,12 +149,12 @@ int loadSol(Sol *sol,char verb) {
   }
   if ( !inm )  return(-1);
 
-  sol->np = GmfStatKwd(inm,GmfSolAtVertices,&sol->type[0],&sol->size[0],sol->typtab[0]);
+  sol->np = GmfStatKwd(inm,GmfSolAtVertices,sol->type,sol->size,sol->typtab[0]);
   if ( !sol->np )  return(-1);
 
   if ( verb != '0' )  fprintf(stdout,"    %s:",data);
 
-  sol->u = (double*)calloc(sol->np+1,sol->size[0]*sizeof(double));
+  sol->u = (double*)calloc(sol->np*sol->size[0],sizeof(double));
   assert(sol->u);
 
   GmfGotoKwd(inm,GmfSolAtVertices);
@@ -188,7 +188,7 @@ int loadSol(Sol *sol,char verb) {
   GmfCloseMesh(inm);
 
   if ( verb != '0' ) {
-    fprintf(stdout," %d data vectors\n",sol->np);
+    fprintf(stdout," %d data\n",sol->np);
   }
 
   return(1);
