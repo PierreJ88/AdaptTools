@@ -1,4 +1,4 @@
-# AdaptTools [![Build Status](https://travis-ci.org/ICStoolbox/AdaptTools.svg?branch=master)](https://travis-ci.org/ICStoolbox/AdaptTools)
+# AdaptTools [![Build Status](https://travis-ci.org/ISCDtoolbox/AdaptTools.svg?branch=master)](https://travis-ci.org/ISCDtoolbox/AdaptTools)
 
 This directory contains a set of tools for mesh adaptation intwo and three dimensions. They can be used and combined in a Linux/Unix/Posix-compliant shell script wrapper or called as functions from C/C++/F programs.
 
@@ -9,12 +9,12 @@ The approach pionneered in our group (F. Hecht et al.) relies on the constructio
 ![aniso](https://cloud.githubusercontent.com/assets/11386916/13727601/ecdd2862-e8f8-11e5-97ed-1e436c98a851.png)
 
 #### Installation
-1. Install the [ICS Commons Library](https://github.com/ICStoolbox/Commons) on your system. 
+1. Install the [ISCD Commons Library](https://github.com/ISCDtoolbox/Commons) on your system. 
 Please refer to the instructions provided on the ICS Commons Library page in order to install this library.
 
 2. download the zip archive of AdaptTools or clone this repository:
 
-   ` git clone https://github.com/ICStoolbox/AdaptTools.git `
+   ` git clone https://github.com/ISCDtoolbox/AdaptTools.git `
 
    navigate to the downloaded directory: 
 
