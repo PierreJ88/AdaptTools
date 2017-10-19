@@ -14,11 +14,10 @@ before_script:
   - make install
   - cd -
 script:
-  - mkdir mshint/build
-  - cd mshint/build
+  - mkdir build
+  - cd build
   - cmake ..
   - make
-  - make install
   - cd -
 notifications:
   email: false
