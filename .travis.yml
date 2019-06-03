@@ -1,23 +1,21 @@
-language: c++
+language: c
+
 compiler:
   - gcc
   - clang
 os:
   - linux
   - osx
-before_script:
-  - git clone https://github.com/ICStoolbox/Commons.git
-  - mkdir Commons/build
-  - cd Commons/build
-  - cmake ..
-  - make 
-  - make install
-  - cd -
+
 script:
   - mkdir build
   - cd build
   - cmake ..
   - make
-  - cd -
+  - make install
+  - cd ..
+  - ./bin/mshint -h
+  - ./bin/mshmet -h
+
 notifications:
   email: false
