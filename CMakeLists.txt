@@ -47,8 +47,8 @@ set_property(TARGET mshint PROPERTY C_STANDARD 99)
 # Set the installation properties of the mshint executable
 install(TARGETS mshint RUNTIME DESTINATION "${PROJECT_SOURCE_DIR}/bin")
 install(FILES sources/commonFiles/chrono.h
-              sources/commmonFiles/libmesh5.h
-              sources/commmonFiles/memory.h
+              sources/commonFiles/libmesh5.h
+              sources/commonFiles/memory.h
               sources/mshint/mshint.h DESTINATION "${PROJECT_SOURCE_DIR}/include")
 
 
