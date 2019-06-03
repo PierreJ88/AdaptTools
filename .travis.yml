@@ -13,9 +13,9 @@ script:
   - cmake ..
   - make
   - make install
-  - cd ..
-  - ./bin/mshint -h
-  - ./bin/mshmet -h
+#  - cd ..
+#  - ./bin/mshint -h
+#  - ./bin/mshmet -h
 
 notifications:
   email: false
