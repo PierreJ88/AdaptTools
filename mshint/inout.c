@@ -124,13 +124,16 @@ int loadSol(Sol *sol,char verb) {
   int          k,i,inm,keyword;
   char        *ptr,data[128];
 
-  if ( !sol->name )  return(-1);
+  if ( !sol->name ) {
+    if ( verb != '0' )  fprintf(stderr," # %s: file not found.\n",sol->name);
+    return(-1);
+  }
   strcpy(data,sol->name);
 
   /* remove .mesh extension */
   ptr = strstr(data,".mesh");
   if ( ptr )  *ptr = '\0';
-  
+
   /* look for data file */
   ptr = strstr(data,".sol");
   if ( ptr ) {
@@ -147,10 +150,16 @@ int loadSol(Sol *sol,char verb) {
       inm = GmfOpenMesh(data,GmfRead,&sol->ver,&sol->dim);
     }
   }
-  if ( !inm )  return(-1);
+  if ( !inm )  {
+    if ( verb != '0' )  fprintf(stderr," # %s: file not found.\n",data);
+    return(-1);
+  }
 
   sol->np = GmfStatKwd(inm,GmfSolAtVertices,sol->type,sol->size,sol->typtab[0]);
-  if ( !sol->np )  return(-1);
+  if ( !sol->np )  {
+    if ( verb != '0' )  fprintf(stderr," # %s: no points.\n",sol->name);
+    return(-1);
+  }
 
   if ( verb != '0' )  fprintf(stdout,"    %s:",data);
 

@@ -90,6 +90,41 @@ static int parsar(int argc,char *argv[],MIst *mist) {
           usage(argv[0]);
         }
         break;
+      case 's':
+        if ( (!strcmp(argv[i],"-s")) || (!strcmp(argv[i],"-sol"))  ) {
+          if ( ++i < argc && isascii(argv[i][0]) && argv[i][0]!='-' ) {
+            data = (char*)calloc(strlen(argv[i])+10,sizeof(char));
+            assert ( data );
+            strcpy(data,argv[i]);
+            ptr = strstr(data,".solb");
+
+            char ext[8];
+            /* Binary sol file */
+            if ( ptr ) {
+              strcpy(ext, ".solb");
+            }
+            else {
+              /* Ascii sol file */
+              strcpy(ext, ".sol");
+            }
+
+            ptr = strstr(data,".sol");
+            if ( ptr )  { *ptr = '\0'; }
+            strcat(data,ext);
+            mist->ssrc.name = data;
+
+          }
+          else {
+            fprintf(stderr,"%s: -s option: please provide a valid string.\n",argv[0]);
+            exit(EXIT_FAILURE);
+          }
+        }
+        else {
+          fprintf(stderr,"%s: illegal option %s\n",argv[0],argv[i]);
+          usage(argv[0]);
+        }
+        break;
+
       default:
 	      fprintf(stderr,"%s: illegal option %s\n",argv[0],argv[i]);
 	      usage(argv[0]);

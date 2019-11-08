@@ -162,6 +162,9 @@ int hessls_2d(MSst *msst) {
       h[1] = (mb[0]*a[1] + mb[1]*a[3] + mb[2]*a[4]) / dd;
       h[2] = (mb[0]*a[2] + mb[1]*a[4] + mb[2]*a[5]) / dd;
     }
+    else {
+	printf("Pt %d : SINGULAR hessian\n",k);
+    }
   }
   free(ha);
   free(hb);
@@ -230,6 +233,9 @@ int gradls_2d(MSst *msst) {
       g = &msst->sol.g[msst->info.dim*k];
       g[0] = (a[2]*b[0] - a[1]*b[1]) / dd;
       g[1] = (a[0]*b[1] - a[1]*b[0]) / dd;
+    }
+    else {
+	printf("Singular grad pt %d\n",k);
     }
   }
   free(ga);
