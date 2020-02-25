@@ -38,7 +38,7 @@ static void excfun(int sigid) {
     case SIGINT:
       fprintf(stdout," programm killed.\n");  break;
   }
-  fprintf(stdout," # no data file saved.\n"); 
+  fprintf(stdout," # no data file saved.\n");
   exit(1);
 }
 
@@ -53,6 +53,7 @@ static void usage(char *prog) {
   -i           isotropic metric (default is aniso)\n\
   -l           metric for level sets\n\
   -n nrm       metric normalization method (default=1)\n\
+  -g           create a map linked to the gradient (default=0)\n\
   -v           suppress any message (for use with function call).\n\
   +v           increase the verbosity level for output.\n\n\
   source.mesh    name of the source mesh\n\
@@ -109,6 +110,9 @@ static int parsar(int argc,char *argv[],MSst *msst) {
         break;
       case 'l':
           msst->info.ls = 1;
+        break;
+      case 'g':
+	msst->info.grad = 1;
         break;
       case 'n':
         if ( ++i < argc && isdigit(argv[i][0]) ) {
@@ -261,8 +265,9 @@ int main(int argc,char **argv) {
   msst.info.hmax  = 1.0;
   msst.info.iso   = 0;
   msst.info.ls    = 0;
+  msst.info.grad  = 0;
   msst.info.nrm   = 1;
-	msst.info.ver   = 1;	
+  msst.info.ver   = 1;
   msst.info.verb  = '1';
 
   /* parse command line */
@@ -302,7 +307,7 @@ int main(int argc,char **argv) {
   chrono(OFF,&msst.info.ctim[2]);
   if ( msst.info.verb != '0' ) {
 		printim(msst.info.ctim[2].gdif,stim);
-    if ( ier )  
+    if ( ier )
       fprintf(stdout," ** COMPLETED: %s\n\n",stim);
     else
       fprintf(stdout," ** NOT COMPLETED!: %s\n\n",stim);

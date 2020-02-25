@@ -52,7 +52,7 @@ typedef Tetra * pTetra;
 typedef struct {
   double   hmin,hmax,hgrad,err;
   int      np,nt,ne,dim,ver;
-  char     verb,iso,ls,nrm;
+  char     verb,iso,ls,nrm,grad;
   mytime   ctim[TIMEMAX];
 } Info;
 
@@ -85,7 +85,8 @@ int  hashel_2d(MSst *mist);
 int  hashel_3d(MSst *mist);
 int  mshmet1_2d(MSst *mist);
 int  mshmet1_3d(MSst *mist);
-
+int  nrmgrad(MSst *msst);
+int  defgrad2met(MSst *msst);
 
 
 #endif

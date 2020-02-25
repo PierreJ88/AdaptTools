@@ -13,7 +13,7 @@ int defmet_2d(MSst *msst) {
   hmax = 1.0 / (msst->info.hmin*msst->info.hmin);
 
   for (k=0; k<msst->info.np; k++) {
-		h = &msst->sol.h[3*k];
+    h = &msst->sol.h[3*k];
 
     if ( !eigen_2d(h,l,vp) ) {
       if ( msst->info.verb != '0' )  fprintf(stdout," # Error: eigenvalue problem.\n");
@@ -38,6 +38,160 @@ int defmet_2d(MSst *msst) {
   return(1);
 }
 
+/* define 2d metric tensor field from a gradient vector */
+int defgrad2met(MSst *msst) {
+  pPoint    ppt;
+  double   *m,*h,dd,hmin,hmax,coormin[3],coormax[3],delta;
+  int       k,i;
+  double    l[2],vp[2][2],nrm_grad;
+  double    *sol, sol_norm[msst->info.np], max_sol, min_sol;
+  double    grad_norm[msst->info.np], max_grad, min_grad;
+
+
+  if (msst->info.iso) {
+    hmin = 1./msst->info.hmax;
+    if ( !msst->info.hmin ) {
+      coormin[0] =  coormin[1] = coormin[2] = DBL_MAX;
+      coormax[0] =  coormax[1] = coormax[2] = 0;
+      for (k=0; k<msst->info.np; k++) {
+        ppt = &msst->mesh.point[k];
+        for (i=0; i<msst->info.dim; ++i ) {
+   	coormin[i] = MS_MIN(ppt->c[i],coormin[i]);
+   	coormax[i] = MS_MAX(ppt->c[i],coormax[i]);
+        }
+      }
+      delta = 0;
+      for (i=0; i<msst->info.dim; ++i ) {
+        delta = MS_MAX ( delta, coormax[i]-coormin[i] );
+      }
+      hmax = 1./delta;
+    }
+    else {
+      hmax = 1./msst->info.hmin;
+    }
+
+    for (k=0; k<msst->info.np; k++) {
+      h = &msst->sol.g[msst->info.dim*k];
+
+      dd = msst->info.err*(h[0]*h[0]+h[1]*h[1]);
+      dd = MS_MIN(MS_MAX(hmin,dd),hmax);
+      msst->sol.m[k] = 1./dd;
+    }
+  }
+
+
+  else {
+
+    hmin = msst->info.hmin;
+    hmax = msst->info.hmax;
+
+    /* Determine sol(min max) and grad(min max) */
+    max_sol = 0.0;
+    min_sol = 1.e200;
+    max_grad = 0.0;
+    min_grad = 1.e200;
+    for (k=0; k<msst-> info.np; k++) {
+      h = &msst->sol.g[msst->info.dim*k];
+      sol = &msst->sol.u[k];
+
+      max_sol = MS_MAX(*sol, max_sol);
+      min_sol = MS_MIN(*sol, min_sol);
+
+      nrm_grad = sqrt(h[0]*h[0] + h[1]*h[1]);
+
+      max_grad = MS_MAX(nrm_grad, max_grad);
+      min_grad = MS_MIN(nrm_grad, min_grad);
+    }
+
+    printf("max_sol =%lf\n",max_sol);
+    printf("min_sol =%lf\n",min_sol);
+    printf("max_grad =%lf\n",max_grad);
+    printf("min_grad =%lf\n",min_grad);
+
+    /* Normalize sol and grad */
+    for (k=0; k<msst-> info.np; k++) {
+      h = &msst->sol.g[msst->info.dim*k];
+      sol = &msst->sol.u[k];
+
+      sol_norm[k] = (*sol - min_sol) / (max_sol - min_sol);
+
+      nrm_grad = sqrt(h[0]*h[0] + h[1]*h[1]);
+
+      grad_norm[k] = (nrm_grad - min_grad) / (max_grad - min_grad);
+
+      grad_norm[k] = pow(grad_norm[k],msst->info.err);
+    }
+
+
+    /* max_sol = 0.0; */
+    /* min_sol = 1.e200; */
+    /* max_grad = 0.0; */
+    /* min_grad = 1.e200; */
+    /* for (k=0; k<msst-> info.np; k++) { */
+    /*   h = &msst->sol.g[msst->info.dim*k]; */
+    /*   sol = &msst->sol.u[k]; */
+
+    /*   max_sol = MS_MAX(sol_norm[k], max_sol); */
+    /*   min_sol = MS_MIN(sol_norm[k], min_sol); */
+
+    /*   nrm_grad = sqrt(grad_norm[msst->info.dim*k]*grad_norm[msst->info.dim*k] + grad_norm[msst->info.dim*k+1]*grad_norm[msst->info.dim*k+1]); */
+
+    /*   max_grad = MS_MAX(nrm_grad, max_grad); */
+    /*   min_grad = MS_MIN(nrm_grad, min_grad); */
+    /* } */
+
+    for (k=0; k<msst-> info.np; k++) {
+
+      l[1] = hmax*sol_norm[k] + hmin*(1-sol_norm[k]);
+      l[0] = hmin*grad_norm[k] + l[1]*(1-grad_norm[k]);
+
+      l[0] = 1.0/(l[0]*l[0]);
+      l[1] = 1.0/(l[1]*l[1]);
+
+      printf("******************");
+      printf("grad =%lf\n",grad_norm[k]);
+      printf("lambda 0 =%lf\n",l[0]);
+      printf("lambda 1 =%lf\n",l[1]);
+      printf("size 0 =%lf\n",1.0/sqrt(l[0]));
+      printf("size 1 =%lf\n",1.0/sqrt(l[1]));
+
+
+      /* hmin=msst->info.hmin; */
+      /* hmax=msst->info.hmax; */
+
+      /* nrm_grad = sqrt(h[0]*h[0] + h[1]*h[1]); */
+
+      /* /\* max_g = MS_MAX(fabs(h[0]),fabs(h[1])) *\/ */
+      /* /\* min_g = MS_MIN(fabs(h[0]),fabs(h[1])) *\/ */
+
+      /* l[0] = hmin + (nrm_grad)*hmin; */
+      /* l[1] = hmax + 1.0/(nrm_grad)*hmax; */
+
+      h = &msst->sol.g[msst->info.dim*k];
+      dd = sqrt(h[0]*h[0]+h[1]*h[1]);
+
+      m = &msst->sol.m[3*k];
+      if ( dd < MS_EPS ) {
+      	m[0] = l[0];
+      	m[1] = 0.;
+      	m[2] = l[1];
+      } else {
+      	vp[0][0] = h[0]/dd;
+	vp[0][1] = h[1]/dd;
+
+      	vp[1][0] = - vp[0][1];
+	vp[1][1] = vp[0][0];
+
+    	/* compute Mat = B M Bt */
+    	m[0] = l[0]*vp[0][0]*vp[0][0] + l[1]*vp[1][0]*vp[1][0];
+    	m[1] = l[0]*vp[0][0]*vp[0][1] + l[1]*vp[1][0]*vp[1][1];
+    	m[2] = l[0]*vp[0][1]*vp[0][1] + l[1]*vp[1][1]*vp[1][1];
+      }
+    }
+  }
+  return 1;
+}
+
 
 int nrmhes_2d(MSst *msst) {
   double   u,err;
@@ -60,6 +214,22 @@ int nrmhes_2d(MSst *msst) {
     for (k=0; k<msst->info.np; k++) {
       u = fabs(msst->sol.u[k]);
       for (i=0; i<3; i++)  msst->sol.h[3*k+i] *= CTE2D / MS_MAX(err,u);
+    }
+    break;
+  }
+
+  return(1);
+}
+
+int nrmgrad(MSst *msst) {
+  double   u,err;
+  int      i,k;
+
+  switch(msst->info.nrm) {
+  case 0:  /* no normalization */
+  default:
+    for (k=0; k<msst->info.np; k++) {
+      for (i=0; i<msst->info.dim; i++)  msst->sol.g[msst->info.dim*k+i] /= msst->info.err;
     }
     break;
   }
@@ -108,7 +278,7 @@ int hessls_2d(MSst *msst) {
         ma[3] += a[0]*a[2];
         ma[4] += a[1]*a[2];
         ma[5] += a[2]*a[2];
-        
+
         /* c = At*b */
         mb[0] += a[0]*dd;
         mb[1] += a[1]*dd;
@@ -225,7 +395,7 @@ int gradls_2d(MSst *msst) {
 
   /* gradient evaluation */
   for (k=0; k<msst->info.np; k++) {
-    /* solution of A(2,2)*grad(1,2) = b(1,2) */ 
+    /* solution of A(2,2)*grad(1,2) = b(1,2) */
     a  = &ga[3*k];
     b  = &gb[2*k];
     dd = a[0]*a[2] - a[1]*a[1];
@@ -258,26 +428,27 @@ int mshmet1_2d(MSst *msst) {
     return(0);
   }
 
-  /* compute nodal hessian matrix */
-  msst->sol.h = (double*)calloc(msst->info.np,3*sizeof(double));
-  assert(msst->sol.h);
-  ier = hessls_2d(msst);
-  free(msst->sol.g);
-  if ( !ier ) {
-    if ( msst->info.verb != '0' )  fprintf(stdout," # Error: unable to evaluate hessian\n");
-    free(msst->sol.h);
-    return(0);
-  }
+  if ( !msst->info.grad ) {
+    /* compute nodal hessian matrix */
+    msst->sol.h = (double*)calloc(msst->info.np,3*sizeof(double));
+    assert(msst->sol.h);
+    ier = hessls_2d(msst);
+    free(msst->sol.g);
+    if ( !ier ) {
+      if ( msst->info.verb != '0' )  fprintf(stdout," # Error: unable to evaluate hessian\n");
+      free(msst->sol.h);
+      return(0);
+    }
 
-  /* normalize hessian */
-  ier = nrmhes_2d(msst);
-  if ( !ier ) {
-    if ( msst->info.verb != '0' )  fprintf(stdout," # Error: unable to normalize hessian\n");
-    free(msst->sol.h);
-    return(0);
-  }
 
-  /* compute metric */
+    /* normalize hessian */
+    ier = nrmhes_2d(msst);
+    if ( !ier ) {
+      if ( msst->info.verb != '0' )  fprintf(stdout," # Error: unable to normalize hessian\n");
+      free(msst->sol.h);
+      return(0);
+    }
+    /* compute metric */
   if ( msst->info.iso )
     msst->sol.m = (double*)calloc(msst->info.np,sizeof(double));
   else
@@ -290,6 +461,27 @@ int mshmet1_2d(MSst *msst) {
     return(0);
   }
 
+  }
+  else {
+    /* sensitivity to varations (gradient) */
+    /*ier = nrmgrad(msst); */
+    if ( !ier ) {
+      if ( msst->info.verb != '0' )  fprintf(stdout," # Error: unable to compute sensitive gradiant\n");
+      free(msst->sol.g);
+      return(0);
+    }
+    if ( msst->info.iso )
+      msst->sol.m = (double*)calloc(msst->info.np,sizeof(double));
+    else
+      msst->sol.m = (double*)calloc(msst->info.np,3*sizeof(double));
+    assert(msst->sol.m);
+    ier = defgrad2met(msst);
+    free(msst->sol.g);
+    if ( !ier ) {
+      if ( msst->info.verb != '0' )  fprintf(stdout," # Error: unable to define metric\n");
+      return(0);
+    }
+  }
+
   return(1);
 }
-
