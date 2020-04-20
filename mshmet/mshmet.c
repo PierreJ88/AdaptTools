@@ -44,7 +44,7 @@ static void excfun(int sigid) {
 
 
 static void usage(char *prog) {
-  fprintf(stdout,"\n usage: %s [+/-v | -h | -i | -l] source[.mesh] [-e err] [-rmin|-hmin|-hmax|-hgrad val] [-n nrm] [-o output[].sol]] [-p param[.mhes]]\n",prog);
+  fprintf(stdout,"\n usage: %s [+/-v | -h | -i | -l] source[.mesh] [-e err] [-freq|-order|-rmin|-hmin|-hmax|-hgrad val] [-n nrm] [-o output[].sol]] [-p param[.mhes]]\n",prog);
 
   fprintf(stdout,"\nOptions and flags:\n\
   --help       show the syntax and exit.\n\
@@ -90,6 +90,14 @@ static int parsar(int argc,char *argv[],MSst *msst) {
           if ( ++i < argc && isdigit(argv[i][0]) )
             msst->info.rmin = strtod(argv[i],NULL);
         }
+	else if ( !strcmp(argv[i],"-freq") ) {
+          if ( ++i < argc && isdigit(argv[i][0]) )
+            msst->info.freq = strtod(argv[i],NULL);
+        }
+	else if ( !strcmp(argv[i],"-order") ) {
+          if ( ++i < argc && isdigit(argv[i][0]) )
+            msst->info.order = strtod(argv[i],NULL);
+        }
         else if ( !strcmp(argv[i],"-hmax") ) {
           if ( ++i < argc && isdigit(argv[i][0]) )
             msst->info.hmax = strtod(argv[i],NULL);
@@ -114,6 +122,12 @@ static int parsar(int argc,char *argv[],MSst *msst) {
         break;
       case 'l':
           msst->info.ls = 1;
+        break;
+      case 'f':
+	if ( !strcmp(argv[i],"-freq") ) {
+          if ( ++i < argc && isdigit(argv[i][0]) )
+            msst->info.freq = strtod(argv[i],NULL);
+	}
         break;
       case 'g':
 	msst->info.grad = 1;
@@ -148,6 +162,12 @@ static int parsar(int argc,char *argv[],MSst *msst) {
             msst->info.rmin = strtod(argv[i],NULL);
 	}
 	break;
+      case 'o':
+	if ( !strcmp(argv[i],"-order") ) {
+          if ( ++i < argc && isdigit(argv[i][0]) )
+            msst->info.order = strtod(argv[i],NULL);
+	}
+        break;
       case 'v':
         if ( !strcmp(argv[i],"-v") )
           msst->info.verb = '0';
@@ -232,6 +252,10 @@ int parsop(MSst *msst) {
       fscanf(in,"%lf",&msst->info.hmin);
     else if ( !strcmp(data,"rmin") )
       fscanf(in,"%lf",&msst->info.rmin);
+    else if ( !strcmp(data,"order") )
+      fscanf(in,"%d",&msst->info.order);
+    else if ( !strcmp(data,"freq") )
+      fscanf(in,"%lf",&msst->info.freq);
     else if ( !strcmp(data,"hmax") )
       fscanf(in,"%lf",&msst->info.hmax);
     else if ( !strcmp(data,"err") )
@@ -281,6 +305,8 @@ int main(int argc,char **argv) {
   msst.info.nrm   = 1;
   msst.info.ver   = 1;
   msst.info.rmin  = CTE_GEOPHY_HMIN;
+  msst.info.freq  = CTE_GEOPHY_FREQ;
+  msst.info.order = CTE_GEOPHY_ORDER;
   msst.info.verb  = '1';
 
   /* parse command line */

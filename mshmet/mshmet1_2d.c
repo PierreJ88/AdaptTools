@@ -3,6 +3,9 @@
 
 #define CTE2D    2.0 / 9.0
 
+#define CTE_GEOPHY_FREQ   10.0
+#define CTE_GEOPHY_ORDER  1
+
 #define CTE_GEOPHY_HMIN  50.0
 #define CTE_GEOPHY_HMAX 200.0
 
@@ -44,8 +47,8 @@ int defmet_2d(MSst *msst) {
 /* define 2d metric tensor field from a gradient vector */
 int defgrad2met(MSst *msst) {
   pPoint    ppt;
-  double   *m,*h,dd,rmin,hmin,hmax;
-  int       k,i;
+  double   *m,*h,dd,rmin,hmin,hmax,freq;
+  int       order,k,i;
   double    l[2],vp[2][2],nrm_grad;
   double    *sol, sol_norm[msst->info.np], max_sol, min_sol;
   double    grad_norm[msst->info.np], max_grad, min_grad;
@@ -67,13 +70,20 @@ int defgrad2met(MSst *msst) {
     rmin = msst->info.rmin;
   }
 
-  if ( !msst->info.hmax ) {
-    printf("No HMAX given chosen arbitrary to be :%lf\n",CTE_GEOPHY_HMAX);
-    hmin = CTE_GEOPHY_HMIN;
-    hmax = CTE_GEOPHY_HMAX;
+  if ( !msst->info.freq ) {
+    printf("No FREQ given chosen arbitrary to be freq :%lf\n", CTE_GEOPHY_FREQ);
+    freq = CTE_GEOPHY_FREQ;
   }
   else {
-    hmax = msst->info.hmax;
+    freq = msst->info.freq;
+  }
+
+  if ( !msst->info.order ) {
+    printf("No OREDER given chosen arbitrary to be order :%d\n",CTE_GEOPHY_ORDER);
+    order = CTE_GEOPHY_ORDER;
+  }
+  else {
+    order = msst->info.order;
   }
 
   /* Determine sol(min max) and grad(min max) */
@@ -95,6 +105,9 @@ int defgrad2met(MSst *msst) {
       min_grad = MS_MIN(nrm_grad, min_grad);
     }
 
+    printf("freq=%lf\n",freq);
+    printf("order=%d\n",order);
+
     printf("max_sol =%lf\n",max_sol);
     printf("min_sol =%lf\n",min_sol);
     printf("max_grad =%lf\n",max_grad);
@@ -113,7 +126,6 @@ int defgrad2met(MSst *msst) {
 
       grad_norm[k] = pow(grad_norm[k]*0.7,msst->info.err);
 
-      printf("grad k =%lf\n",grad_norm[k]);
 
     }
 
