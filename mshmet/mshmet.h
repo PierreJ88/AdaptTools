@@ -27,6 +27,9 @@
 #define CTE2D    2.0 / 9.0
 #define CTE3D    9.0 / 32.0
 
+#define CTE_GEOPHY_HMIN  50.0
+#define CTE_GEOPHY_HMAX 200.0
+
 #define MS_MAX(a,b)   ( ((a) < (b)) ? (b) : (a) )
 #define MS_MIN(a,b)   ( ((a) < (b)) ? (a) : (b) )
 #define MS_MIN3(a,b,c) ( (a) < (b) ? ((a)<(c) ? (a) : (c)) : ((b)<(c) ? (b) : (c)) )
@@ -50,7 +53,7 @@ typedef struct {
 typedef Tetra * pTetra;
 
 typedef struct {
-  double   hmin,hmax,hgrad,err;
+  double   hmin,hmax,hgrad,err,rmin;
   int      np,nt,ne,dim,ver;
   char     verb,iso,ls,nrm,grad;
   mytime   ctim[TIMEMAX];

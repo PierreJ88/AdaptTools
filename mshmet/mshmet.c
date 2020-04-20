@@ -44,7 +44,7 @@ static void excfun(int sigid) {
 
 
 static void usage(char *prog) {
-  fprintf(stdout,"\n usage: %s [+/-v | -h | -i | -l] source[.mesh] [-e err] [-hmin|-hmax|-hgrad val] [-n nrm] [-o output[].sol]] [-p param[.mhes]]\n",prog);
+  fprintf(stdout,"\n usage: %s [+/-v | -h | -i | -l] source[.mesh] [-e err] [-rmin|-hmin|-hmax|-hgrad val] [-n nrm] [-o output[].sol]] [-p param[.mhes]]\n",prog);
 
   fprintf(stdout,"\nOptions and flags:\n\
   --help       show the syntax and exit.\n\
@@ -85,6 +85,10 @@ static int parsar(int argc,char *argv[],MSst *msst) {
         if ( !strcmp(argv[i],"-hmin") ) {
           if ( ++i < argc && isdigit(argv[i][0]) )
             msst->info.hmin = strtod(argv[i],NULL);
+        }
+	else if ( !strcmp(argv[i],"-rmin") ) {
+          if ( ++i < argc && isdigit(argv[i][0]) )
+            msst->info.rmin = strtod(argv[i],NULL);
         }
         else if ( !strcmp(argv[i],"-hmax") ) {
           if ( ++i < argc && isdigit(argv[i][0]) )
@@ -138,6 +142,12 @@ static int parsar(int argc,char *argv[],MSst *msst) {
           usage(argv[0]);
         }
         break;
+      case 'r':
+	if ( !strcmp(argv[i],"-rmin") ) {
+          if ( ++i < argc && isdigit(argv[i][0]) )
+            msst->info.rmin = strtod(argv[i],NULL);
+	}
+	break;
       case 'v':
         if ( !strcmp(argv[i],"-v") )
           msst->info.verb = '0';
@@ -220,6 +230,8 @@ int parsop(MSst *msst) {
     /* check for keywords */
     if ( !strcmp(data,"hmin") )
       fscanf(in,"%lf",&msst->info.hmin);
+    else if ( !strcmp(data,"rmin") )
+      fscanf(in,"%lf",&msst->info.rmin);
     else if ( !strcmp(data,"hmax") )
       fscanf(in,"%lf",&msst->info.hmax);
     else if ( !strcmp(data,"err") )
@@ -268,6 +280,7 @@ int main(int argc,char **argv) {
   msst.info.grad  = 0;
   msst.info.nrm   = 1;
   msst.info.ver   = 1;
+  msst.info.rmin  = CTE_GEOPHY_HMIN;
   msst.info.verb  = '1';
 
   /* parse command line */

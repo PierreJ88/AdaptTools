@@ -3,6 +3,9 @@
 
 #define CTE2D    2.0 / 9.0
 
+#define CTE_GEOPHY_HMIN  50.0
+#define CTE_GEOPHY_HMAX 200.0
+
 
 /* define 2d metric tensor field */
 int defmet_2d(MSst *msst) {
@@ -41,55 +44,44 @@ int defmet_2d(MSst *msst) {
 /* define 2d metric tensor field from a gradient vector */
 int defgrad2met(MSst *msst) {
   pPoint    ppt;
-  double   *m,*h,dd,hmin,hmax,coormin[3],coormax[3],delta;
+  double   *m,*h,dd,rmin,hmin,hmax;
   int       k,i;
   double    l[2],vp[2][2],nrm_grad;
   double    *sol, sol_norm[msst->info.np], max_sol, min_sol;
   double    grad_norm[msst->info.np], max_grad, min_grad;
 
-
-  if (msst->info.iso) {
-    hmin = 1./msst->info.hmax;
-    if ( !msst->info.hmin ) {
-      coormin[0] =  coormin[1] = coormin[2] = DBL_MAX;
-      coormax[0] =  coormax[1] = coormax[2] = 0;
-      for (k=0; k<msst->info.np; k++) {
-        ppt = &msst->mesh.point[k];
-        for (i=0; i<msst->info.dim; ++i ) {
-   	coormin[i] = MS_MIN(ppt->c[i],coormin[i]);
-   	coormax[i] = MS_MAX(ppt->c[i],coormax[i]);
-        }
-      }
-      delta = 0;
-      for (i=0; i<msst->info.dim; ++i ) {
-        delta = MS_MAX ( delta, coormax[i]-coormin[i] );
-      }
-      hmax = 1./delta;
-    }
-    else {
-      hmax = 1./msst->info.hmin;
-    }
-
-    for (k=0; k<msst->info.np; k++) {
-      h = &msst->sol.g[msst->info.dim*k];
-
-      dd = msst->info.err*(h[0]*h[0]+h[1]*h[1]);
-      dd = MS_MIN(MS_MAX(hmin,dd),hmax);
-      msst->sol.m[k] = 1./dd;
-    }
+  if ( !msst->info.hmin ) {
+    printf("No HMIN given chosen arbitrary to be :%lf\n",CTE_GEOPHY_HMIN);
+    hmin = CTE_GEOPHY_HMIN;
+  }
+  else {
+    hmin = msst->info.hmin;
+    rmin = msst->info.hmin;
   }
 
-
+  if ( !msst->info.rmin ) {
+    printf("No RMIN given chosen arbitrary to be hmin :%lf\n", hmin);
+    rmin = hmin;
+  }
   else {
+    rmin = msst->info.rmin;
+  }
 
-    hmin = msst->info.hmin;
+  if ( !msst->info.hmax ) {
+    printf("No HMAX given chosen arbitrary to be :%lf\n",CTE_GEOPHY_HMAX);
+    hmin = CTE_GEOPHY_HMIN;
+    hmax = CTE_GEOPHY_HMAX;
+  }
+  else {
     hmax = msst->info.hmax;
+  }
 
-    /* Determine sol(min max) and grad(min max) */
+  /* Determine sol(min max) and grad(min max) */
     max_sol = 0.0;
     min_sol = 1.e200;
     max_grad = 0.0;
     min_grad = 1.e200;
+
     for (k=0; k<msst-> info.np; k++) {
       h = &msst->sol.g[msst->info.dim*k];
       sol = &msst->sol.u[k];
@@ -119,77 +111,61 @@ int defgrad2met(MSst *msst) {
 
       grad_norm[k] = (nrm_grad - min_grad) / (max_grad - min_grad);
 
-      grad_norm[k] = pow(grad_norm[k],msst->info.err);
+      grad_norm[k] = pow(grad_norm[k]*0.7,msst->info.err);
+
+      printf("grad k =%lf\n",grad_norm[k]);
+
     }
 
+    if (msst->info.iso) {
+      for (k=0; k<msst-> info.np; k++) {
 
-    /* max_sol = 0.0; */
-    /* min_sol = 1.e200; */
-    /* max_grad = 0.0; */
-    /* min_grad = 1.e200; */
-    /* for (k=0; k<msst-> info.np; k++) { */
-    /*   h = &msst->sol.g[msst->info.dim*k]; */
-    /*   sol = &msst->sol.u[k]; */
+	l[1] = hmax*sol_norm[k] + hmin*(1-sol_norm[k]);
+	l[0] = rmin*grad_norm[k] + l[1]*(1-grad_norm[k]);
 
-    /*   max_sol = MS_MAX(sol_norm[k], max_sol); */
-    /*   min_sol = MS_MIN(sol_norm[k], min_sol); */
+	/* l[0] = 1.0/(l[0]*l[0]); */
+	/* l[1] = 1.0/(l[1]*l[1]); */
 
-    /*   nrm_grad = sqrt(grad_norm[msst->info.dim*k]*grad_norm[msst->info.dim*k] + grad_norm[msst->info.dim*k+1]*grad_norm[msst->info.dim*k+1]); */
+	msst->sol.m[k] = MS_MIN(l[0],l[1]);
 
-    /*   max_grad = MS_MAX(nrm_grad, max_grad); */
-    /*   min_grad = MS_MIN(nrm_grad, min_grad); */
-    /* } */
-
-    for (k=0; k<msst-> info.np; k++) {
-
-      l[1] = hmax*sol_norm[k] + hmin*(1-sol_norm[k]);
-      l[0] = hmin*grad_norm[k] + l[1]*(1-grad_norm[k]);
-
-      l[0] = 1.0/(l[0]*l[0]);
-      l[1] = 1.0/(l[1]*l[1]);
-
-      printf("******************");
-      printf("grad =%lf\n",grad_norm[k]);
-      printf("lambda 0 =%lf\n",l[0]);
-      printf("lambda 1 =%lf\n",l[1]);
-      printf("size 0 =%lf\n",1.0/sqrt(l[0]));
-      printf("size 1 =%lf\n",1.0/sqrt(l[1]));
-
-
-      /* hmin=msst->info.hmin; */
-      /* hmax=msst->info.hmax; */
-
-      /* nrm_grad = sqrt(h[0]*h[0] + h[1]*h[1]); */
-
-      /* /\* max_g = MS_MAX(fabs(h[0]),fabs(h[1])) *\/ */
-      /* /\* min_g = MS_MIN(fabs(h[0]),fabs(h[1])) *\/ */
-
-      /* l[0] = hmin + (nrm_grad)*hmin; */
-      /* l[1] = hmax + 1.0/(nrm_grad)*hmax; */
-
-      h = &msst->sol.g[msst->info.dim*k];
-      dd = sqrt(h[0]*h[0]+h[1]*h[1]);
-
-      m = &msst->sol.m[3*k];
-      if ( dd < MS_EPS ) {
-      	m[0] = l[0];
-      	m[1] = 0.;
-      	m[2] = l[1];
-      } else {
-      	vp[0][0] = h[0]/dd;
-	vp[0][1] = h[1]/dd;
-
-      	vp[1][0] = - vp[0][1];
-	vp[1][1] = vp[0][0];
-
-    	/* compute Mat = B M Bt */
-    	m[0] = l[0]*vp[0][0]*vp[0][0] + l[1]*vp[1][0]*vp[1][0];
-    	m[1] = l[0]*vp[0][0]*vp[0][1] + l[1]*vp[1][0]*vp[1][1];
-    	m[2] = l[0]*vp[0][1]*vp[0][1] + l[1]*vp[1][1]*vp[1][1];
       }
     }
-  }
-  return 1;
+
+    else {
+
+      for (k=0; k<msst-> info.np; k++) {
+
+	l[1] = hmax*sol_norm[k] + hmin*(1-sol_norm[k]);
+	l[0] = rmin*grad_norm[k] + l[1]*(1-grad_norm[k]);
+
+	l[0] = 1.0/(l[0]*l[0]);
+	l[1] = 1.0/(l[1]*l[1]);
+
+
+	h = &msst->sol.g[msst->info.dim*k];
+	dd = sqrt(h[0]*h[0]+h[1]*h[1]);
+
+	m = &msst->sol.m[3*k];
+	if ( dd < MS_EPS ) {
+	  m[0] = l[0];
+	  m[1] = 0.;
+	  m[2] = l[1];
+	} else {
+	  vp[0][0] = h[0]/dd;
+	  vp[0][1] = h[1]/dd;
+
+	  vp[1][0] = - vp[0][1];
+	  vp[1][1] = vp[0][0];
+
+	  /* compute Mat = B M Bt */
+	  m[0] = l[0]*vp[0][0]*vp[0][0] + l[1]*vp[1][0]*vp[1][0];
+	  m[1] = l[0]*vp[0][0]*vp[0][1] + l[1]*vp[1][0]*vp[1][1];
+	  m[2] = l[0]*vp[0][1]*vp[0][1] + l[1]*vp[1][1]*vp[1][1];
+	}
+      }
+    }
+
+    return 1;
 }
 
 
