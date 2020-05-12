@@ -29,7 +29,9 @@
 
 #define CTE_GEOPHY_FREQ  10.0
 #define CTE_GEOPHY_ORDER 1
+#define CTE_GEOPHY_PPW 20
 
+#define CTE_GEOPHY_RMIN  1.0
 #define CTE_GEOPHY_HMIN  50.0
 #define CTE_GEOPHY_HMAX 200.0
 
@@ -57,7 +59,7 @@ typedef Tetra * pTetra;
 
 typedef struct {
   double   hmin,hmax,hgrad,err,rmin,freq;
-  int      np,nt,ne,dim,ver,order;
+  int      np,nt,ne,dim,ver,order,ppw;
   char     verb,iso,ls,nrm,grad;
   mytime   ctim[TIMEMAX];
 } Info;

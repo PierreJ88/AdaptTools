@@ -6,6 +6,8 @@
 #define CTE_GEOPHY_FREQ   10.0
 #define CTE_GEOPHY_ORDER  1
 
+#define CTE_GEOPHY_RMIN  1.0
+
 #define CTE_GEOPHY_HMIN  50.0
 #define CTE_GEOPHY_HMAX 200.0
 
@@ -47,10 +49,10 @@ int defmet_2d(MSst *msst) {
 /* define 2d metric tensor field from a gradient vector */
 int defgrad2met(MSst *msst) {
   pPoint    ppt;
-  double   *m,*h,dd,rmin,hmin,hmax,freq;
-  int       order,k,i;
+  double   *m,*h,dd,rmin,hmin,hmax,freq,lbd,area;
+  int       order,k,i,ppw;
   double    l[2],vp[2][2],nrm_grad;
-  double    *sol, sol_norm[msst->info.np], max_sol, min_sol;
+  double    *sol, max_sol, min_sol;
   double    grad_norm[msst->info.np], max_grad, min_grad;
 
   if ( !msst->info.hmin ) {
@@ -59,12 +61,11 @@ int defgrad2met(MSst *msst) {
   }
   else {
     hmin = msst->info.hmin;
-    rmin = msst->info.hmin;
   }
 
   if ( !msst->info.rmin ) {
-    printf("No RMIN given chosen arbitrary to be hmin :%lf\n", hmin);
-    rmin = hmin;
+    printf("No RMIN given chosen arbitrary to be :%lf\n", CTE_GEOPHY_RMIN);
+    rmin = CTE_GEOPHY_RMIN;
   }
   else {
     rmin = msst->info.rmin;
@@ -86,18 +87,21 @@ int defgrad2met(MSst *msst) {
     order = msst->info.order;
   }
 
-  /* Determine sol(min max) and grad(min max) */
-    max_sol = 0.0;
-    min_sol = 1.e200;
+  if ( !msst->info.ppw ) {
+    ppw = 20/(order+1)+2;
+    printf("No PPW given chosen arbitrary to be order :%d\n",ppw);
+
+  }
+  else {
+    ppw = msst->info.ppw;
+  }
+
+  /* Determine Min and Max of grad amplitude */
     max_grad = 0.0;
     min_grad = 1.e200;
 
     for (k=0; k<msst-> info.np; k++) {
       h = &msst->sol.g[msst->info.dim*k];
-      sol = &msst->sol.u[k];
-
-      max_sol = MS_MAX(*sol, max_sol);
-      min_sol = MS_MIN(*sol, min_sol);
 
       nrm_grad = sqrt(h[0]*h[0] + h[1]*h[1]);
 
@@ -105,41 +109,36 @@ int defgrad2met(MSst *msst) {
       min_grad = MS_MIN(nrm_grad, min_grad);
     }
 
-    printf("freq=%lf\n",freq);
-    printf("order=%d\n",order);
-
-    printf("max_sol =%lf\n",max_sol);
-    printf("min_sol =%lf\n",min_sol);
-    printf("max_grad =%lf\n",max_grad);
-    printf("min_grad =%lf\n",min_grad);
-
-    /* Normalize sol and grad */
+    /* Normalize the gradient between [0,1] */
     for (k=0; k<msst-> info.np; k++) {
       h = &msst->sol.g[msst->info.dim*k];
-      sol = &msst->sol.u[k];
-
-      sol_norm[k] = (*sol - min_sol) / (max_sol - min_sol);
-
       nrm_grad = sqrt(h[0]*h[0] + h[1]*h[1]);
-
       grad_norm[k] = (nrm_grad - min_grad) / (max_grad - min_grad);
-
-      grad_norm[k] = pow(grad_norm[k]*0.7,msst->info.err);
-
-
+      grad_norm[k] = pow(grad_norm[k],msst->info.err);
     }
+
+
+    /* Output checking : */
+    printf("======= Personal output for checking : ========");
+    printf("freq=%lf\n",freq);
+    printf("order=%d\n",order);
+    printf("PPW=%d\n",ppw);
+    printf("max_grad =%lf\n",max_grad);
+    printf("min_grad =%lf\n",min_grad);
+    printf("===============================================");
 
     if (msst->info.iso) {
       for (k=0; k<msst-> info.np; k++) {
 
-	l[1] = hmax*sol_norm[k] + hmin*(1-sol_norm[k]);
-	l[0] = rmin*grad_norm[k] + l[1]*(1-grad_norm[k]);
+	lbd = msst->sol.u[k]/freq;
+	area = (lbd*lbd/(8*ppw*ppw))*(4*order*order+12*order+8);
 
-	/* l[0] = 1.0/(l[0]*l[0]); */
-	/* l[1] = 1.0/(l[1]*l[1]); */
+	l[1] = sqrt((4/sqrt(3))*(area));
+	l[0] = (1-grad_norm[k])*l[1] + (1/rmin)*grad_norm[k]*l[1];
+
 
 	msst->sol.m[k] = MS_MIN(l[0],l[1]);
-
+	//msst->sol.m[k] = grad_norm[k];
       }
     }
 
@@ -147,12 +146,13 @@ int defgrad2met(MSst *msst) {
 
       for (k=0; k<msst-> info.np; k++) {
 
-	l[1] = hmax*sol_norm[k] + hmin*(1-sol_norm[k]);
-	l[0] = rmin*grad_norm[k] + l[1]*(1-grad_norm[k]);
+	lbd = msst->sol.u[k]/freq;
+	area = (lbd*lbd/(8*ppw*ppw))*(4*order*order+12*order+8);
+	l[1] = sqrt((4/sqrt(3))*(area));
+	l[0] = (1-grad_norm[k])*l[1] + (1/rmin)*grad_norm[k]*l[1];
 
 	l[0] = 1.0/(l[0]*l[0]);
 	l[1] = 1.0/(l[1]*l[1]);
-
 
 	h = &msst->sol.g[msst->info.dim*k];
 	dd = sqrt(h[0]*h[0]+h[1]*h[1]);

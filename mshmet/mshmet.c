@@ -44,7 +44,7 @@ static void excfun(int sigid) {
 
 
 static void usage(char *prog) {
-  fprintf(stdout,"\n usage: %s [+/-v | -h | -i | -l] source[.mesh] [-e err] [-freq|-order|-rmin|-hmin|-hmax|-hgrad val] [-n nrm] [-o output[].sol]] [-p param[.mhes]]\n",prog);
+  fprintf(stdout,"\n usage: %s [+/-v | -h | -i | -l] source[.mesh] [-e err] [-freq|-ppw|-order|-rmin|-hmin|-hmax|-hgrad val] [-n nrm] [-o output[].sol]] [-p param[.mhes]]\n",prog);
 
   fprintf(stdout,"\nOptions and flags:\n\
   --help       show the syntax and exit.\n\
@@ -98,6 +98,10 @@ static int parsar(int argc,char *argv[],MSst *msst) {
           if ( ++i < argc && isdigit(argv[i][0]) )
             msst->info.order = strtod(argv[i],NULL);
         }
+	else if ( !strcmp(argv[i],"-ppw") ) {
+          if ( ++i < argc && isdigit(argv[i][0]) )
+            msst->info.ppw = strtod(argv[i],NULL);
+        }
         else if ( !strcmp(argv[i],"-hmax") ) {
           if ( ++i < argc && isdigit(argv[i][0]) )
             msst->info.hmax = strtod(argv[i],NULL);
@@ -145,7 +149,18 @@ static int parsar(int argc,char *argv[],MSst *msst) {
           usage(argv[0]);
         }
         break;
+      case 'o':
+	if ( !strcmp(argv[i],"-order") ) {
+          if ( ++i < argc && isdigit(argv[i][0]) )
+            msst->info.order = strtod(argv[i],NULL);
+	}
+        break;
       case 'p':
+	if ( !strcmp(argv[i],"-ppw") ) {
+          if ( ++i < argc && isdigit(argv[i][0]) )
+            msst->info.ppw = strtod(argv[i],NULL);
+	}
+        break;
         if ( ++i < argc ) {
           msst->sol.namepar = argv[i];
           ptr = strstr(msst->sol.namepar,".mhes");
@@ -162,12 +177,6 @@ static int parsar(int argc,char *argv[],MSst *msst) {
             msst->info.rmin = strtod(argv[i],NULL);
 	}
 	break;
-      case 'o':
-	if ( !strcmp(argv[i],"-order") ) {
-          if ( ++i < argc && isdigit(argv[i][0]) )
-            msst->info.order = strtod(argv[i],NULL);
-	}
-        break;
       case 'v':
         if ( !strcmp(argv[i],"-v") )
           msst->info.verb = '0';
@@ -254,6 +263,8 @@ int parsop(MSst *msst) {
       fscanf(in,"%lf",&msst->info.rmin);
     else if ( !strcmp(data,"order") )
       fscanf(in,"%d",&msst->info.order);
+    else if ( !strcmp(data,"ppw") )
+      fscanf(in,"%d",&msst->info.ppw);
     else if ( !strcmp(data,"freq") )
       fscanf(in,"%lf",&msst->info.freq);
     else if ( !strcmp(data,"hmax") )
@@ -295,8 +306,8 @@ int main(int argc,char **argv) {
   memset(&msst.sol,0,sizeof(Sol));
 
   /* default values */
-	msst.info.dim   = 3;
-  msst.info.err   = 0.01;
+  msst.info.dim   = 3;
+  msst.info.err   = 1.0;
   msst.info.hmin  = 0.01;
   msst.info.hmax  = 1.0;
   msst.info.iso   = 0;
@@ -304,7 +315,7 @@ int main(int argc,char **argv) {
   msst.info.grad  = 0;
   msst.info.nrm   = 1;
   msst.info.ver   = 1;
-  msst.info.rmin  = CTE_GEOPHY_HMIN;
+  msst.info.rmin  = CTE_GEOPHY_RMIN;
   msst.info.freq  = CTE_GEOPHY_FREQ;
   msst.info.order = CTE_GEOPHY_ORDER;
   msst.info.verb  = '1';
