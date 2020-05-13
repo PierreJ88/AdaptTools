@@ -8,9 +8,6 @@
 
 #define CTE_GEOPHY_RMIN  1.0
 
-#define CTE_GEOPHY_HMIN  50.0
-#define CTE_GEOPHY_HMAX 200.0
-
 
 /* define 2d metric tensor field */
 int defmet_2d(MSst *msst) {
@@ -48,20 +45,11 @@ int defmet_2d(MSst *msst) {
 
 /* define 2d metric tensor field from a gradient vector */
 int defgrad2met(MSst *msst) {
-  pPoint    ppt;
-  double   *m,*h,dd,rmin,hmin,hmax,freq,lbd,area;
+  double   *m,*h,dd,rmin,freq,lbd,area;
   int       order,k,i,ppw;
-  double    l[2],vp[2][2],nrm_grad;
-  double    *sol, max_sol, min_sol;
-  double    grad_norm[msst->info.np], max_grad, min_grad;
-
-  if ( !msst->info.hmin ) {
-    printf("No HMIN given chosen arbitrary to be :%lf\n",CTE_GEOPHY_HMIN);
-    hmin = CTE_GEOPHY_HMIN;
-  }
-  else {
-    hmin = msst->info.hmin;
-  }
+  double    l[2],vp[2][2];
+  double    *sol;
+  double    grad_norm[msst->info.np],max_grad,min_grad,nrm_grad;
 
   if ( !msst->info.rmin ) {
     printf("No RMIN given chosen arbitrary to be :%lf\n", CTE_GEOPHY_RMIN);
@@ -88,7 +76,7 @@ int defgrad2met(MSst *msst) {
   }
 
   if ( !msst->info.ppw ) {
-    ppw = 20/(order+1)+2;
+    ppw = 20/(order+1)+2; // Arbitrary function to be defined
     printf("No PPW given chosen arbitrary to be order :%d\n",ppw);
 
   }
@@ -114,6 +102,8 @@ int defgrad2met(MSst *msst) {
       h = &msst->sol.g[msst->info.dim*k];
       nrm_grad = sqrt(h[0]*h[0] + h[1]*h[1]);
       grad_norm[k] = (nrm_grad - min_grad) / (max_grad - min_grad);
+
+      /* Adjust gradient with e */
       grad_norm[k] = pow(grad_norm[k],msst->info.err);
     }
 
@@ -127,28 +117,35 @@ int defgrad2met(MSst *msst) {
     printf("min_grad =%lf\n",min_grad);
     printf("===============================================");
 
+
+    /* ISO */
     if (msst->info.iso) {
       for (k=0; k<msst-> info.np; k++) {
 
+	/* l[1] critera(freq,vp,order) */
 	lbd = msst->sol.u[k]/freq;
 	area = (lbd*lbd/(8*ppw*ppw))*(4*order*order+12*order+8);
-
 	l[1] = sqrt((4/sqrt(3))*(area));
+
+	/* l[0] size map at interfaces */
 	l[0] = (1-grad_norm[k])*l[1] + (1/rmin)*grad_norm[k]*l[1];
 
-
 	msst->sol.m[k] = MS_MIN(l[0],l[1]);
-	//msst->sol.m[k] = grad_norm[k];
       }
     }
 
+
+    /* ANISO */
     else {
 
       for (k=0; k<msst-> info.np; k++) {
 
+	/* l[1] critera(freq,vp,order) */
 	lbd = msst->sol.u[k]/freq;
 	area = (lbd*lbd/(8*ppw*ppw))*(4*order*order+12*order+8);
 	l[1] = sqrt((4/sqrt(3))*(area));
+
+	/* l[0] size map at interfaces */
 	l[0] = (1-grad_norm[k])*l[1] + (1/rmin)*grad_norm[k]*l[1];
 
 	l[0] = 1.0/(l[0]*l[0]);
