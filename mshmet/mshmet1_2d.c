@@ -45,10 +45,9 @@ int defmet_2d(MSst *msst) {
 
 /* define 2d metric tensor field from a gradient vector */
 int defgrad2met(MSst *msst) {
-  double   *m,*h,dd,rmin,freq,lbd,area;
+  double   *m,*h,u,dd,rmin,freq,lbd,area;
   int       order,k,i,ppw;
   double    l[2],vp[2][2];
-  double    *sol;
   double    grad_norm[msst->info.np],max_grad,min_grad,nrm_grad;
 
   if ( !msst->info.rmin ) {
@@ -76,9 +75,21 @@ int defgrad2met(MSst *msst) {
   }
 
   if ( !msst->info.ppw ) {
-    ppw = 20/(order+1)+2; // Arbitrary function to be defined
-    printf("No PPW given chosen arbitrary to be order :%d\n",ppw);
-
+    if (order==1) {
+      ppw = 20; // Arbitrary
+	}
+    else if (order==2) {
+      ppw=13;
+    }
+    else if (order==3) {
+      ppw=10;
+    }
+    else if (order==4) {
+      ppw=10;
+    }
+    else if (order>=5) {
+      ppw=9;
+    }
   }
   else {
     ppw = msst->info.ppw;
@@ -104,18 +115,24 @@ int defgrad2met(MSst *msst) {
       grad_norm[k] = (nrm_grad - min_grad) / (max_grad - min_grad);
 
       /* Adjust gradient with e */
-      grad_norm[k] = pow(grad_norm[k],msst->info.err);
+      //grad_norm[k] = pow(grad_norm[k],msst->info.err);
+      if (grad_norm[k]>=msst->info.err) {
+      	grad_norm[k]=1.0;
+      }
+      else {
+      	grad_norm[k]=0.0;
+      }
     }
 
 
     /* Output checking : */
-    printf("======= Personal output for checking : ========");
+    printf("======= PARAMETER IN MSHMET : ========");
     printf("freq=%lf\n",freq);
     printf("order=%d\n",order);
     printf("PPW=%d\n",ppw);
     printf("max_grad =%lf\n",max_grad);
     printf("min_grad =%lf\n",min_grad);
-    printf("===============================================");
+    printf("======================================");
 
 
     /* ISO */
